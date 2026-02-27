@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentasi Aktualisasi - E-Notulen Bapenda Sultra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* ================= THE SETUP & RESET ================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dark background for presentation mode */
+            color: #334155;
+            overflow: hidden; /* Prevent scrolling */
+            width: 100vw;
+            height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ================= PRESENTATION FRAMEWORK ================= */
+        #presentation-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .slide-wrapper.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+        }
+
+        .slide-inner {
+            width: 1280px;
+            height: 720px;
+            background-color: #ffffff;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            position: relative;
+            padding: 50px 70px 70px 70px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Responsive scaling for smaller screens (Preview panel) */
+        @media (max-width: 1300px) {
+            .slide-inner { transform: scale(0.8) !important; }
+        }
+        @media (max-width: 1050px) {
+            .slide-inner { transform: scale(0.65) !important; }
+        }
+        @media (max-width: 850px) {
+            .slide-inner { transform: scale(0.5) !important; }
+        }
+
+        .slide-wrapper.active .slide-inner {
+            transform: scale(1); /* Return to normal scale when active */
+        }
+        
+        @media (max-width: 1300px) { .slide-wrapper.active .slide-inner { transform: scale(0.8); } }
+        @media (max-width: 1050px) { .slide-wrapper.active .slide-inner { transform: scale(0.65); } }
+        @media (max-width: 850px) { .slide-wrapper.active .slide-inner { transform: scale(0.5); } }
+
+
+        /* Abstract Background Design for slides */
+        .slide-inner::before {
+            content: '';
+            position: absolute;
+            top: -150px;
+            right: -150px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.05) 0%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide-inner > * { position: relative; z-index: 1; }
+
+        /* ================= CONTROLS UI ================= */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .controls button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .controls button:hover:not(:disabled) {
+            background: rgba(255,255,255,0.2);
+            color: #38bdf8;
+        }
+
+        .controls button:disabled {
+            color: #475569;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .utility-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.2s;
+        }
+        .utility-btn:hover { background: #1e293b; color: #38bdf8; }
+
+        /* === TAMBAHAN CSS UNTUK TOMBOL EXPORT PDF & MODE PRINT === */
+        .export-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 85px; /* Ditaruh di sebelah tombol fullscreen */
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.2s;
+        }
+        .export-btn:hover { background: #1e293b; color: #ef4444; }
+
+        /* Memaksa slide kembali ke ukuran normal 100% saat di-capture html2canvas */
+        .pdf-export-mode .slide-inner {
+            transform: scale(1) !important;
+            transition: none !important;
+        }
+        .pdf-export-mode .slide-wrapper {
+            transition: none !important; /* Menghilangkan animasi saat proses capture */
+        }
+        /* ========================================================= */
+
+        /* ================= TYPOGRAPHY & LAYOUT ================= */
+        .slide-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 25px 0;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+            width: fit-content;
+        }
+
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; width: 100%; }
+
+        .slide-footer {
+            position: absolute;
+            bottom: 30px;
+            left: 70px;
+            right: 70px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 15px;
+            z-index: 10;
+        }
+
+        /* ================= SLIDE TYPES ================= */
+        /* Title Slide Layout Baru (Split Screen) */
+        .title-slide-split {
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            background-color: #ffffff;
+        }
+        .title-left-panel {
+            width: 35%;
+            background-color: #e2e8f0; /* Light gray-blue */
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 3px solid #94a3b8;
+        }
+        .title-right-panel {
+            width: 65%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px;
+            position: relative;
+        }
+        .profile-photo {
+            width: 170px;
+            height: 220px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Slightly oval top */
+            background-color: #dc2626; /* Red background for formal photo */
+            border: 6px solid #ffffff;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .name-plate {
+            background-color: #1e3a8a; /* Dark blue matching theme */
+            color: white;
+            padding: 15px;
+            width: 100%;
+            text-align: center;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .name-plate h3 { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+        .name-plate p { font-size: 13px; font-weight: 500; color: #bae6fd; }
+        .participant-info {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            line-height: 1.6;
+        }
+        .banner-title {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #38bdf8;
+            padding: 12px 40px;
+            margin-bottom: 40px;
+            border-radius: 4px;
+        }
+
+        /* Title Slide Lama (untuk referensi, tidak dipakai di slide 1 lagi) */
+        .title-slide {
+            padding: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .title-slide .slide-footer { display: none; }
+
+        /* Bleed Image */
+        .bleed-image-layout {
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            height: 100%;
+        }
+        .bleed-image-layout .content-container { padding: 60px 50px 60px 70px; position: relative; display: flex; flex-direction: column; }
+        .bleed-image-layout .image-container { height: 100%; width: 100%; overflow: hidden; }
+        .bleed-image-layout img { width: 100%; height: 100%; object-fit: cover; }
+        .bleed-image-layout .slide-footer { left: 70px; width: calc(100% - 120px); }
+
+        /* Two Column Tiled */
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%; height: 100%; }
+        .two-column.tiled > div {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 40px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+
+        /* Q&A */
+        .qa-layout { margin: auto; text-align: center; width: 100%; }
+
+        /* ================= TABLES ================= */
+        .table-layout {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .table-layout th {
+            background-color: #1e3a8a;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 2px solid #1e40af;
+            font-size: 14px;
+        }
+        .table-layout td {
+            background-color: #ffffff;
+            color: #334155;
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            vertical-align: top;
+            line-height: 1.5;
+        }
+        .table-layout tr:nth-child(even) td { background-color: #f8fafc; }
+        .table-layout tr:last-child td { border-bottom: none; }
+        
+        /* Dense Variants */
+        .table-layout.dense th, .table-layout.dense td { padding: 8px 14px; font-size: 13px; }
+        .table-layout.ultra-dense th, .table-layout.ultra-dense td { padding: 6px 12px; font-size: 12px; line-height: 1.4; }
+
+        .highlight-row td { background-color: #eff6ff !important; font-weight: 600; color: #1e3a8a; }
+        .bg-success { background-color: #10b981 !important; text-align: center; color: white;}
+        .bg-process { background-color: #3b82f6 !important; text-align: center; color: white;}
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="presentation-container">
+
+        <div class="slide-wrapper active">
+            <div class="slide-inner title-slide-split">
+                
+                <div class="title-left-panel">
+                    <div style="position: absolute; top: 30px; left: 30px; background: white; padding: 10px 20px; border-radius: 8px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #cbd5e1;">
+                        <i class="fa-solid fa-graduation-cap" style="color: #2563eb; font-size: 24px;"></i>
+                        <span style="font-family: 'Montserrat', sans-serif; font-weight: 800; color: #0f172a; font-size: 16px; letter-spacing: 1px;">LATSAR CPNS 2026</span>
+                    </div>
+<br>
+<br>
+                    <div class="profile-photo">
+                        <img src="foto.jpeg" alt="Foto Peserta">
+                    </div>
+
+                    <div class="name-plate">
+                        <h3>IMAM HAYATUL JIHAD, S.Kom</h3>
+                        <p>NIP. 19970209 202504 1 005</p>
+                    </div>
+
+                   <div class="participant-info" style="width: 100%;">
+                        <div style="margin-bottom: 20px;">
+                            <p style="color: #1e3a8a; font-weight: 800; margin-bottom: 4px;">Peserta Latsar CPNS Golongan III</p>
+                            <p style="margin-bottom: 2px;">Angkatan II Kelompok III</p>
+                            <p style="margin-bottom: 2px;">Penata Kelola Sistem dan Teknologi Informasi</p>
+                            <p>Pemerintah Provinsi Sulawesi Tenggara</p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; justify-content: center; text-align: left; border-top: 2px dashed #cbd5e1; padding-top: 20px;">
+                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <span style="display: inline-block; background: #dbeafe; color: #1e3a8a; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Coach</span>
+                                <p style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 4px; line-height: 1.3;">Dr. KAFARUDIN, SE., MM.</p>
+                                <p style="font-size: 10px; color: #64748b; font-weight: 500; font-family: 'Inter', sans-serif;">NIP. 196908011994031014</p>
+                            </div>
+                            
+                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <span style="display: inline-block; background: #dcfce7; color: #166534; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Mentor</span>
+                                <p style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 4px; line-height: 1.3;">UMMI NURUL RAHMI, S.T.</p>
+                                <p style="font-size: 10px; color: #64748b; font-weight: 500; font-family: 'Inter', sans-serif;">NIP. 198012162008042003</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 0 60px 60px; border-color: transparent transparent #94a3b8 transparent; box-shadow: -3px -3px 5px rgba(0,0,0,0.1);"></div>
+                </div>
+
+                <div class="title-right-panel">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.15), transparent 50%), radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1), transparent 50%); pointer-events: none;"></div>
+                    
+                    <div class="banner-title" style="z-index: 10;">
+                        <h2 style="font-family: 'Montserrat', sans-serif; color: #f8fafc; letter-spacing: 4px; font-weight: 700; font-size: 24px; margin: 0; text-transform: uppercase;">RANCANGAN AKTUALISASI</h2>
+                    </div>
+
+                    <div style="z-index: 10; max-width: 90%; padding: 0 20px;">
+                        <h1 style="font-family: 'Montserrat', sans-serif; color: #ffffff; font-size: 36px; font-weight: 800; line-height: 1.5; margin-bottom: 40px;">DIGITALISASI PENGELOLAAN NOTULENSI RAPAT MELALUI APLIKASI E-NOTULEN BERBASIS WEB</h1>
+                       
+                        <div style="margin: 0 auto 35px auto; width: 100px; height: 100px; display: flex; justify-content: center; align-items: center;">
+    <img src="logo.svg" alt="Logo Instansi" style="width: 100%; height: 100%; object-fit: contain;">
+</div>
+
+                        <h2 style="font-family: 'Montserrat', sans-serif; color: #e0f2fe; font-size: 18px; font-weight: 600; line-height: 1.6;">BADAN PENDAPATAN DAERAH<br>PROVINSI SULAWESI TENGGARA<br>TAHUN 2026</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner bleed-image-layout">
+                <div class="content-container">
+                    <h2 class="slide-title">LATAR BELAKANG & TUJUAN</h2>
+                    <div class="content-area">
+                        <h3 style="color: #0f172a; font-size: 22px; margin-bottom: 15px; font-weight: 700;">Urgensi Digitalisasi Administrasi</h3>
+                        <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">Badan Pendapatan Daerah Prov. Sultra memiliki intensitas rapat yang sangat tinggi. Efektivitas koordinasi saat ini masih terhambat oleh pengelolaan administrasi konvensional.</p>
+                        
+                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                            <div style="background: #fee2e2; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <i class="fa-solid fa-file-excel" style="color: #ef4444; font-size: 20px;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 16px; color: #0f172a; margin-bottom: 6px; font-weight: 700;">Pencatatan Manual</h4>
+                                <p style="font-size: 14px; color: #475569; line-height: 1.5;">Absensi menggunakan kertas fisik rentan tercecer, rusak, dan memakan waktu untuk direkapitulasi.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                            <div style="background: #fef3c7; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <i class="fa-solid fa-folder-open" style="color: #f59e0b; font-size: 20px;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 16px; color: #0f172a; margin-bottom: 6px; font-weight: 700;">Penyimpanan Tersebar</h4>
+                                <p style="font-size: 14px; color: #475569; line-height: 1.5;">Notulensi diketik tanpa database terpusat, menyebabkan lambatnya pencarian data historis.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="background: #d0bdf4; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <i class="fa-solid fa-rocket" style="color: #6b21a8; font-size: 20px;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 16px; color: #0f172a; margin-bottom: 6px; font-weight: 700;">Solusi Terintegrasi</h4>
+                                <p style="font-size: 14px; color: #475569; line-height: 1.5;">Aplikasi E-Notulen mewujudkan pengarsipan <em>paperless</em> & <em>real-time</em> dukung Smart Governance.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 2</span></div>
+                </div>
+                <div class="image-container">
+                    <img src="https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=1000&auto=format&fit=crop" alt="Ruang Rapat" crossorigin="anonymous">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">DATA DUKUNG: KEADAAN PEGAWAI</h2>
+                <div class="content-area">
+                    <p style="margin-bottom: 20px; font-size: 16px;">Kuantitas SDM per Oktober 2025 yang masif menunjukkan perlunya otomatisasi pada sistem administrasi internal untuk mengimbangi frekuensi koordinasi.</p>
+                    <table class="table-layout dense">
+                        <thead>
+                            <tr>
+                                <th width="5%">No.</th><th width="20%">Status Pegawai</th><th width="15%" style="text-align: center;">Laki-Laki</th><th width="15%" style="text-align: center;">Perempuan</th><th width="15%" style="text-align: center;">Total</th><th width="30%">Keterangan Unit Kerja</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>PNS</td><td align="center">49</td><td align="center">54</td><td align="center">103</td><td>Kantor Induk</td></tr>
+                            <tr><td>2</td><td>CPNS</td><td align="center">4</td><td align="center">5</td><td align="center">9</td><td>Kantor Induk</td></tr>
+                            <tr><td>3</td><td>PPPK</td><td align="center">12</td><td align="center">11</td><td align="center">23</td><td>Kantor Induk</td></tr>
+                            <tr><td>4</td><td>Non ASN</td><td align="center">4</td><td align="center">1</td><td align="center">5</td><td>Kantor Induk</td></tr>
+                            <tr class="highlight-row"><td></td><td><strong>Sub Total Kantor Induk</strong></td><td align="center"><strong>69</strong></td><td align="center"><strong>71</strong></td><td align="center"><strong>140</strong></td><td></td></tr>
+                            <tr><td>5</td><td>PNS</td><td align="center">103</td><td align="center">101</td><td align="center">204</td><td>UPTB</td></tr>
+                            <tr><td>6</td><td>CPNS</td><td align="center">0</td><td align="center">0</td><td align="center">0</td><td>UPTB</td></tr>
+                            <tr><td>7</td><td>PPPK</td><td align="center">23</td><td align="center">18</td><td align="center">41</td><td>UPTB</td></tr>
+                            <tr><td>8</td><td>Non ASN</td><td align="center">1</td><td align="center">3</td><td align="center">4</td><td>UPTB</td></tr>
+                            <tr class="highlight-row"><td></td><td><strong>Sub Total UPTB</strong></td><td align="center"><strong>127</strong></td><td align="center"><strong>122</strong></td><td align="center"><strong>249</strong></td><td></td></tr>
+                            <tr class="highlight-row" style="background-color: #dbeafe !important;"><td></td><td><strong>TOTAL KESELURUHAN</strong></td><td align="center"><strong>196</strong></td><td align="center"><strong>193</strong></td><td align="center"><strong>389</strong></td><td><strong>Total Pegawai</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 3</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">DATA DUKUNG: REKAPITULASI ASET</h2>
+                <div class="content-area">
+                    <p style="margin-bottom: 20px; font-size: 16px;">Pengelolaan sarana dan prasarana (aset) perkantoran Bapenda Sultra yang menjadi modal dasar penerapan efisiensi operasional.</p>
+                    <table class="table-layout">
+                        <thead>
+                            <tr>
+                                <th width="10%" style="text-align: center;">No.</th><th width="50%">Klasifikasi / Jenis Aset</th><th width="40%" style="text-align: right;">Nilai Aset (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row"><td colspan="2"><strong>Aset Tetap</strong></td><td align="right"><strong>103.085.426.489</strong></td></tr>
+                            <tr><td align="center">1</td><td>Tanah</td><td align="right">8.088.450.000</td></tr>
+                            <tr><td align="center">2</td><td>Peralatan dan Mesin</td><td align="right">33.746.199.315</td></tr>
+                            <tr><td align="center">3</td><td>Gedung dan Bangunan</td><td align="right">58.807.502.624</td></tr>
+                            <tr><td align="center">4</td><td>Jalan, Irigasi dan Jaringan</td><td align="right">1.507.631.350</td></tr>
+                            <tr><td align="center">5</td><td>Konstruksi dalam Pengerjaan</td><td align="right">935.643.200</td></tr>
+                            <tr class="highlight-row"><td colspan="2"><strong>Aset Lainnya</strong></td><td align="right"><strong>1.033.333.214</strong></td></tr>
+                            <tr><td align="center">1</td><td>Aset Kondisi Rusak Berat/Hilang</td><td align="right">741.533.214</td></tr>
+                            <tr><td align="center">2</td><td>Aset Tidak Berwujud</td><td align="right">291.800.000</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 4</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">IDENTIFIKASI ISU STRATEGIS</h2>
+                <div class="content-area">
+                    <table class="table-layout dense" style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="5%">No</th><th width="15%">Tugas Fungsi</th><th width="30%">Kondisi Saat Ini</th><th width="30%">Kondisi Yang Diharapkan</th><th width="20%">Isu Teridentifikasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td><td><strong>Pengelolaan Database</strong></td>
+                                <td>Proses backup database sistem pendapatan masih manual/konvensional dan berisiko kehilangan data jika error.</td>
+                                <td>Mekanisme backup otomatis dan berkala untuk menjamin keamanan data pendapatan.</td>
+                                <td>Belum optimalnya sistem pengamanan dan backup database aplikasi.</td>
+                            </tr>
+                            <tr class="highlight-row" style="background-color: #fef08a !important; color: #854d0e;">
+                                <td>2</td><td><strong>Pengembangan Aplikasi</strong></td>
+                                <td><strong>Pencatatan kehadiran (absen) dan notulensi rapat manual (kertas). Rekapitulasi lambat & arsip tercecer.</strong></td>
+                                <td><strong>Sistem aplikasi digital terintegrasi, paperless, terdata real-time, rapi, dan mudah diakses.</strong></td>
+                                <td style="color: #b45309;"><strong>Belum optimalnya pengelolaan administrasi pencatatan dan pengarsipan notulensi rapat.</strong></td>
+                            </tr>
+                            <tr>
+                                <td>3</td><td><strong>Desain & Video</strong></td>
+                                <td>Informasi kegiatan dominan teks statis yang kurang menarik atensi masyarakat.</td>
+                                <td>Konten informasi berbasis multimedia (video/grafis) yang edukatif dan estetik.</td>
+                                <td>Belum optimalnya visualisasi konten edukasi pajak berbasis multimedia.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 5</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">ANALISIS TAPISAN ISU: METODE APKL</h2>
+                <div class="content-area">
+                    <p style="margin-bottom: 20px; font-size: 16px;">Penilaian signifikansi menggunakan parameter Aktual (A), Problematik (P), Khalayak (K), dan Layak (L).</p>
+                    <table class="table-layout">
+                        <thead>
+                            <tr>
+                                <th width="5%" style="text-align:center;">No.</th><th width="60%">Daftar Isu Teridentifikasi</th>
+                                <th width="6%" style="text-align:center;">A</th><th width="6%" style="text-align:center;">P</th><th width="6%" style="text-align:center;">K</th><th width="6%" style="text-align:center;">L</th><th width="6%" style="text-align:center;">Total</th><th width="5%" style="text-align:center;">Rank</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td align="center">1</td><td>Belum optimalnya sistem pengamanan dan backup database</td>
+                                <td align="center">4</td><td align="center">5</td><td align="center">3</td><td align="center">4</td><td align="center"><strong>16</strong></td><td align="center">III</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td align="center">2</td><td style="color: #1d4ed8;"><strong>Belum optimalnya pengelolaan administrasi pencatatan dan pengarsipan notulensi rapat</strong></td>
+                                <td align="center"><strong>5</strong></td><td align="center"><strong>5</strong></td><td align="center"><strong>5</strong></td><td align="center"><strong>5</strong></td>
+                                <td align="center" style="color: #1d4ed8; font-size: 18px;"><strong>20</strong></td><td align="center"><strong>I</strong></td>
+                            </tr>
+                            <tr>
+                                <td align="center">3</td><td>Belum optimalnya visualisasi konten edukasi pajak</td>
+                                <td align="center">4</td><td align="center">4</td><td align="center">5</td><td align="center">4</td><td align="center"><strong>17</strong></td><td align="center">II</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 6</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">AKAR PENYEBAB ISU: METODE USG</h2>
+                <div class="content-area">
+                    <table class="table-layout dense" style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="25%" rowspan="2" style="vertical-align: middle;">Isu Utama Terpilih</th>
+                                <th width="45%" rowspan="2" style="vertical-align: middle;">Penyebab Isu</th>
+                                <th colspan="3" style="text-align: center;">Kriteria</th>
+                                <th width="7%" rowspan="2" style="vertical-align: middle; text-align:center;">Total</th>
+                                <th width="7%" rowspan="2" style="vertical-align: middle; text-align:center;">Rank</th>
+                            </tr>
+                            <tr><th width="5%" style="text-align:center;">U</th><th width="5%" style="text-align:center;">S</th><th width="5%" style="text-align:center;">G</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row">
+                                <td rowspan="3" style="background-color: #ffffff !important; border-bottom: none; vertical-align:top;"><strong>Belum optimalnya pengelolaan administrasi pencatatan dan pengarsipan notulensi rapat.</strong></td>
+                                <td style="color: #1d4ed8;"><strong>Belum adanya sistem aplikasi berbasis web yang memfasilitasi input absensi dan notulensi digital.</strong></td>
+                                <td align="center">5</td><td align="center">5</td><td align="center">5</td>
+                                <td align="center" style="font-size:16px;"><strong>15</strong></td><td align="center"><strong>1</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Belum optimalnya pemanfaatan teknologi penyimpanan awan (cloud) untuk backup data.</td>
+                                <td align="center">4</td><td align="center">4</td><td align="center">4</td><td align="center">12</td><td align="center">2</td>
+                            </tr>
+                            <tr>
+                                <td>Metode pencatatan dan penyimpanan arsip notulen masih dilakukan secara manual fisik.</td>
+                                <td align="center">4</td><td align="center">4</td><td align="center">3</td><td align="center">11</td><td align="center">3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 7</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">GAGASAN PEMECAH ISU</h2>
+                <div class="content-area">
+                    <div class="two-column tiled">
+                        <div>
+                            <div style="background: #dbeafe; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
+                                <i class="fa-solid fa-lightbulb" style="color: #2563eb; font-size: 28px;"></i>
+                            </div>
+                            <h3 style="color: #0f172a; font-size: 24px; font-weight: 700; margin-bottom: 15px;">Gagasan Inovasi Utama</h3>
+                            <p style="font-size: 22px; color: #1e3a8a; font-weight: 700; line-height: 1.4; margin-bottom: 20px;">"Digitalisasi Pengelolaan Notulensi Rapat Melalui Aplikasi E-Notulen Berbasis Web"</p>
+                            <p style="font-size: 15px; color: #475569; line-height: 1.6;">Solusi terintegrasi untuk menyatukan seluruh siklus proses absensi dan dokumentasi hasil rapat dalam satu platform terpusat.</p>
+                        </div>
+                        <div>
+                            <div style="background: #dcfce7; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
+                                <i class="fa-solid fa-microchip" style="color: #10b981; font-size: 28px;"></i>
+                            </div>
+                            <h3 style="color: #0f172a; font-size: 24px; font-weight: 700; margin-bottom: 25px;">Penyelesaian Akar Masalah</h3>
+                            <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                <i class="fa-solid fa-check-circle" style="color: #10b981; margin-top: 2px; margin-right: 12px; font-size: 18px;"></i>
+                                <p style="font-size: 15px; color: #334155; margin: 0; line-height: 1.5;"><strong>Method:</strong> Penggantian pencatatan manual ke form elektronik.</p>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                <i class="fa-solid fa-check-circle" style="color: #10b981; margin-top: 2px; margin-right: 12px; font-size: 18px;"></i>
+                                <p style="font-size: 15px; color: #334155; margin: 0; line-height: 1.5;"><strong>Material:</strong> Pembuatan perangkat lunak khusus (custom software).</p>
+                            </div>
+                            <div style="display: flex; align-items: flex-start;">
+                                <i class="fa-solid fa-check-circle" style="color: #10b981; margin-top: 2px; margin-right: 12px; font-size: 18px;"></i>
+                                <p style="font-size: 15px; color: #334155; margin: 0; line-height: 1.5;"><strong>Technology:</strong> Implementasi sistem database relasional yang aman.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 8</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">RENCANA KEGIATAN & TAHAPAN</h2>
+                <div class="content-area">
+                    <table class="table-layout">
+                        <thead>
+                            <tr>
+                                <th width="8%" style="text-align: center;">Tahap</th><th width="42%">Kegiatan Pemecahan Isu Utama</th><th width="50%">Rincian Tahapan Pelaksanaan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td align="center"><strong>1</strong></td><td><strong>Persiapan & Konsultasi</strong></td><td>Menyiapkan materi &rarr; Menghubungi mentor &rarr; Memaparkan rancangan &rarr; Mencatat saran.</td></tr>
+                            <tr><td align="center"><strong>2</strong></td><td><strong>Pengumpulan Data</strong></td><td>Mencari referensi aplikasi &rarr; Mempelajari alur manual &rarr; Menginventarisir fitur.</td></tr>
+                            <tr><td align="center"><strong>3</strong></td><td><strong>Merancang UI/UX & Database</strong></td><td>Membuat ERD &rarr; Mendesain mockup &rarr; Asistensi desain dengan Tim IT.</td></tr>
+                            <tr><td align="center"><strong>4</strong></td><td><strong>Membuat Aplikasi (Programming)</strong></td><td>Menyiapkan environment &rarr; Pemrograman Backend &rarr; Pemrograman Frontend.</td></tr>
+                            <tr><td align="center"><strong>5</strong></td><td><strong>Uji Coba & Perbaikan</strong></td><td>Uji mandiri &rarr; Uji penerimaan (UAT) &rarr; Perbaikan bug/error.</td></tr>
+                            <tr><td align="center"><strong>6</strong></td><td><strong>Sosialisasi & Penerapan</strong></td><td>Menyiapkan Manual Book &rarr; Sosialisasi internal &rarr; Pendampingan pengguna.</td></tr>
+                            <tr><td align="center"><strong>7</strong></td><td><strong>Evaluasi & Pelaporan</strong></td><td>Menyebar survei &rarr; Menganalisis metrik &rarr; Melapor ke Mentor.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 9</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">KETERKAITAN NILAI BERAKHLAK</h2>
+                <div class="content-area">
+                    <table class="table-layout ultra-dense">
+                        <thead>
+                            <tr><th width="20%">Kegiatan Utama</th><th width="80%">Implementasi Nilai Dasar ASN (Ringkasan)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1. Persiapan</strong></td>
+                                <td><span class="badge">Pelayanan</span> Cekatan siapkan materi. <span class="badge">Akuntabel</span> Data jujur. <span class="badge">Kompeten</span> Kualitas terbaik. <span class="badge">Harmonis</span> Hargai waktu. <span class="badge">Loyal</span> Dedikasi instansi. <span class="badge">Adaptif</span> Proaktif. <span class="badge">Kolaboratif</span> Terbuka pada masukan.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2. Referensi</strong></td>
+                                <td><span class="badge">Pelayanan</span> Referensi prima. <span class="badge">Akuntabel</span> Sumber legal. <span class="badge">Kompeten</span> Learning agility. <span class="badge">Harmonis</span> Hargai HAKI. <span class="badge">Loyal</span> Sesuai SOP. <span class="badge">Adaptif</span> Tren teknologi. <span class="badge">Kolaboratif</span> Berbagi resource.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3. Desain UI/UX</strong></td>
+                                <td><span class="badge">Pelayanan</span> User-friendly. <span class="badge">Akuntabel</span> Integritas data. <span class="badge">Kompeten</span> Skill relasi db. <span class="badge">Harmonis</span> Visual nyaman. <span class="badge">Loyal</span> Identitas instansi. <span class="badge">Adaptif</span> Desain fleksibel. <span class="badge">Kolaboratif</span> Asistensi user.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4. Programming</strong></td>
+                                <td><span class="badge">Pelayanan</span> Tampilan responsif. <span class="badge">Akuntabel</span> Kode tanpa celah. <span class="badge">Kompeten</span> Kinerja optimal. <span class="badge">Harmonis</span> Komen struktur rapi. <span class="badge">Loyal</span> Sekuriti data. <span class="badge">Adaptif</span> Framework modern. <span class="badge">Kolaboratif</span> Library tim.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5. Uji Coba</strong></td>
+                                <td><span class="badge">Pelayanan</span> Bebas error. <span class="badge">Akuntabel</span> Transparan catat bug. <span class="badge">Kompeten</span> Solusi akurat. <span class="badge">Harmonis</span> Terima kritik testern. <span class="badge">Loyal</span> Ekstra effort. <span class="badge">Adaptif</span> Cara alternatif. <span class="badge">Kolaboratif</span> Terima feedback.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>6. Sosialisasi</strong></td>
+                                <td><span class="badge">Pelayanan</span> Ramah membimbing. <span class="badge">Akuntabel</span> Panduan valid. <span class="badge">Kompeten</span> Transfer ilmu teknis. <span class="badge">Harmonis</span> Empati pegawai gaptek. <span class="badge">Loyal</span> Taat instruksi. <span class="badge">Adaptif</span> Media digital. <span class="badge">Kolaboratif</span> Partisipasi aktif.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>7. Evaluasi</strong></td>
+                                <td><span class="badge">Pelayanan</span> Orientasi perbaikan. <span class="badge">Akuntabel</span> Data objektif. <span class="badge">Kompeten</span> Analisa tajam. <span class="badge">Harmonis</span> Hargai responden. <span class="badge">Loyal</span> Tanggung jawab negara. <span class="badge">Adaptif</span> Survei e-form. <span class="badge">Kolaboratif</span> Share hasil analisa.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 10</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">REKAPITULASI HABITUASI ASN</h2>
+                <div class="content-area">
+                    <table class="table-layout dense" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th width="28%">Tahapan Kegiatan Utama</th>
+                                <th width="9%" style="text-align:center;">Pelayanan</th><th width="9%" style="text-align:center;">Akuntabel</th><th width="9%" style="text-align:center;">Kompeten</th><th width="9%" style="text-align:center;">Harmonis</th><th width="9%" style="text-align:center;">Loyal</th><th width="9%" style="text-align:center;">Adaptif</th><th width="9%" style="text-align:center;">Kolaboratif</th><th width="9%" style="text-align:center;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1. Persiapan dan Konsultasi</td><td align="center">4</td><td align="center">4</td><td align="center">4</td><td align="center">4</td><td align="center">4</td><td align="center">4</td><td align="center">4</td><td align="center"><strong>28</strong></td></tr>
+                            <tr><td>2. Pengumpulan Data & Ref.</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center"><strong>21</strong></td></tr>
+                            <tr><td>3. Desain UI/UX & Database</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center"><strong>21</strong></td></tr>
+                            <tr><td>4. Membuat Aplikasi (Coding)</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center"><strong>21</strong></td></tr>
+                            <tr><td>5. Uji Coba & Perbaikan</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">2</td><td align="center">3</td><td align="center">3</td><td align="center"><strong>20</strong></td></tr>
+                            <tr><td>6. Sosialisasi & Penerapan</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center"><strong>21</strong></td></tr>
+                            <tr><td>7. Evaluasi dan Pelaporan</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center">3</td><td align="center"><strong>21</strong></td></tr>
+                            <tr class="highlight-row">
+                                <td><strong>TOTAL PENERAPAN NILAI</strong></td>
+                                <td align="center"><strong>22</strong></td><td align="center"><strong>22</strong></td><td align="center"><strong>22</strong></td><td align="center"><strong>22</strong></td><td align="center"><strong>21</strong></td><td align="center"><strong>22</strong></td><td align="center"><strong>22</strong></td>
+                                <td align="center" style="color: #2563eb; font-size:18px;"><strong>153</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 11</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">MANAJEMEN RISIKO & MITIGASI</h2>
+                <div class="content-area">
+                    <table class="table-layout dense">
+                        <thead>
+                            <tr>
+                                <th width="20%">Fase Kegiatan</th><th width="35%">Potensi Hambatan / Kendala</th><th width="45%">Solusi Preventif / Mitigasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>1. Persiapan</strong></td><td>Mentor/Pimpinan sibuk, sulit bimbingan tatap muka.</td><td>Komunikasi proaktif via WhatsApp, opsi asistensi virtual (Zoom).</td></tr>
+                            <tr><td><strong>2. Pengumpulan Data</strong></td><td>Referensi berbayar, jurnal terkunci, koneksi putus.</td><td>Akses jurnal open-source Perpusnas, forum komunitas IT.</td></tr>
+                            <tr><td><strong>3. Desain UI/UX</strong></td><td>Perbedaan selera antarmuka, revisi mayor di tengah jalan.</td><td>Sepakati batasan scope awal, buat 2 opsi mockup (A/B Testing).</td></tr>
+                            <tr><td><strong>4. Programming</strong></td><td>Laptop rusak, bug kode terlalu rumit.</td><td>Disiplin backup kode ke Cloud harian, kolaborasi dengan tim IT.</td></tr>
+                            <tr><td><strong>5. Testing Aplikasi</strong></td><td>Server overload, penemuan celah kebocoran data.</td><td>Lakukan pengujian bertahap per modul, siapkan server cadangan.</td></tr>
+                            <tr><td><strong>6. Sosialisasi</strong></td><td>Resistensi pegawai senior yang gagap teknologi.</td><td>Pendekatan interpersonal persuasif, sediakan panduan visual.</td></tr>
+                            <tr><td><strong>7. Evaluasi</strong></td><td>Partisipasi pengisian survei kepuasan sangat rendah.</td><td>Terapkan metode jemput bola, broadcast reminder di WA Grup.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 12</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">RENCANA AKSI BELA NEGARA</h2>
+                <div class="content-area">
+                    <table class="table-layout">
+                        <thead>
+                            <tr>
+                                <th width="25%">Nilai Dasar Bela Negara</th><th width="30%">Indikator Sikap / Perilaku</th><th width="45%">Implementasi Aksi (Habituasi)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>1. Cinta Tanah Air</strong></td><td>Menjaga lingkungan & Bangga produk lokal.</td><td>Membawa botol minum, hemat air, memakai batik daerah.</td></tr>
+                            <tr><td><strong>2. Sadar Bernegara</strong></td><td>Disiplin bekerja & Menghormati keanekaragaman.</td><td>Hadir tepat waktu, interaksi tanpa SARA, bahasa baku.</td></tr>
+                            <tr><td><strong>3. Setia pada Pancasila</strong></td><td>Meyakini dasar negara & Musyawarah mufakat.</td><td>Beribadah tepat waktu, aktif sumbang saran rapat.</td></tr>
+                            <tr><td><strong>4. Rela Berkorban</strong></td><td>Menolong sesama & Menyumbang tenaga ekstra.</td><td>Membantu rekan yang gaptek, rela lembur menyelesaikan tugas.</td></tr>
+                            <tr><td><strong>5. Kemampuan Awal</strong></td><td>Sehat raga & Peka kecerdasan emosional.</td><td>Rutin <em>stretching</em> saat <em>coding</em>, manajemen stres saat error.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 13</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <h2 class="slide-title">JADWAL PELAKSANAAN AKTUALISASI</h2>
+                <div class="content-area">
+                    <p style="margin-bottom: 20px; font-size: 16px;">Dilaksanakan selama 30 Hari Kerja Masa Habituasi.</p>
+                    <table class="table-layout" style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="45%" rowspan="2" style="vertical-align: middle;">Tahapan Kegiatan Utama</th>
+                                <th colspan="5" style="text-align: center;">Timeline (Minggu Ke-)</th>
+                            </tr>
+                            <tr>
+                                <th width="11%" style="text-align: center;">M1</th><th width="11%" style="text-align: center;">M2</th><th width="11%" style="text-align: center;">M3</th><th width="11%" style="text-align: center;">M4</th><th width="11%" style="text-align: center;">M5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1. Persiapan dan Konsultasi Aktualisasi</td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td>2. Pengumpulan Data & Referensi API</td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td></td><td></td><td></td></tr>
+                            <tr><td>3. Merancang Desain UI/UX & Database</td><td></td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td></td><td></td></tr>
+                            <tr class="highlight-row"><td>4. Membuat Aplikasi (Coding) E-Notulen</td><td></td><td class="bg-process"><i class="fa-solid fa-laptop-code"></i></td><td class="bg-process"><i class="fa-solid fa-laptop-code"></i></td><td class="bg-process"><i class="fa-solid fa-laptop-code"></i></td><td></td></tr>
+                            <tr><td>5. Uji Coba (Testing) & Perbaikan Error</td><td></td><td></td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td></td></tr>
+                            <tr><td>6. Sosialisasi dan Penerapan Aplikasi</td><td></td><td></td><td></td><td class="bg-success"><i class="fa-solid fa-check"></i></td><td></td></tr>
+                            <tr><td>7. Evaluasi dan Penyusunan Laporan Akhir</td><td></td><td></td><td></td><td></td><td class="bg-success"><i class="fa-solid fa-check"></i></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 14</span></div>
+            </div>
+        </div>
+
+        <div class="slide-wrapper">
+            <div class="slide-inner">
+                <div class="qa-layout">
+				<p style="font-size: 24px; color: #475569; margin-bottom: 10px;">SEKIAN DAN</p>
+                    <h2 style="font-size: 72px; color: #0f172a; margin-bottom: 20px; font-weight: 800; font-family: 'Montserrat', sans-serif;">TERIMA KASIH</h2>
+                    <div style="display: inline-flex; align-items: center; justify-content: center; padding: 15px 40px; border-radius: 50px; background-color: #f1f5f9; border: 2px solid #3b82f6; color: #1e3a8a; font-size: 20px; font-weight: 700;">
+                        <i class="fa-regular fa-comments" style="margin-right: 15px; font-size: 24px;"></i> MOHON ARAHAN & MASUKAN
+                    </div>
+                </div>
+                <div class="slide-footer"><span>BAPENDA SULTRA | E-NOTULEN</span><span>Slide 15</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn" title="Slide Sebelumnya (Panah Kiri)"><i class="fas fa-chevron-left"></i></button>
+        <div class="slide-counter" id="counter">1 / 15</div>
+        <button id="nextBtn" title="Slide Selanjutnya (Panah Kanan / Spasi)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <button class="export-btn" id="exportBtn" title="Export ke PDF">
+        <i class="fas fa-file-pdf"></i>
+    </button>
+    <button class="utility-btn" id="fsBtn" title="Toggle Fullscreen">
+        <i class="fas fa-expand"></i>
+    </button>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let currentSlideIndex = 0;
+            const slides = document.querySelectorAll('.slide-wrapper');
+            const totalSlides = slides.length;
+            
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const counter = document.getElementById('counter');
+            const fsBtn = document.getElementById('fsBtn');
+
+            function updateSlide() {
+                // Update active classes
+                slides.forEach((slide, index) => {
+                    if(index === currentSlideIndex) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+
+                // Update counter text
+                counter.textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+
+                // Update button states
+                prevBtn.disabled = currentSlideIndex === 0;
+                nextBtn.disabled = currentSlideIndex === totalSlides - 1;
+            }
+
+            function goNext() {
+                if (currentSlideIndex < totalSlides - 1) {
+                    currentSlideIndex++;
+                    updateSlide();
+                }
+            }
+
+            function goPrev() {
+                if (currentSlideIndex > 0) {
+                    currentSlideIndex--;
+                    updateSlide();
+                }
+            }
+
+            // Click Events
+            nextBtn.addEventListener('click', goNext);
+            prevBtn.addEventListener('click', goPrev);
+
+            // Keyboard Events
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === ' ') {
+                    e.preventDefault();
+                    goNext();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    goPrev();
+                }
+            });
+
+            // Fullscreen functionality
+            fsBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                    fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    document.exitFullscreen();
+                    fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            });
+
+            // Handle fullscreen change event to update icon if user presses ESC
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            });
+
+            // Init first slide
+            updateSlide();
+
+            // === TAMBAHAN LOGIC EXPORT PDF ===
+            const exportBtn = document.getElementById('exportBtn');
+            exportBtn.addEventListener('click', async () => {
+                const { jsPDF } = window.jspdf;
+                // Buat instance PDF landscape, satuan pixel, dengan ukuran 1280x720
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [1280, 720]
+                });
+                
+                // Ubah icon tombol jadi loading
+                const originalIcon = exportBtn.innerHTML;
+                exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                exportBtn.disabled = true;
+                
+                // Tambahkan class mode export untuk menonaktifkan scale CSS sementara
+                document.body.classList.add('pdf-export-mode');
+
+                // Simpan posisi slide saat ini agar bisa dikembalikan nanti
+                const originalIndex = currentSlideIndex;
+
+                for (let i = 0; i < totalSlides; i++) {
+                    currentSlideIndex = i;
+                    updateSlide();
+                    
+                    // Jeda sebentar agar transisi opacity slide selesai dan font me-render
+                    await new Promise(r => setTimeout(r, 600)); 
+                    
+                    const slideInner = slides[i].querySelector('.slide-inner');
+                    
+                    // Render HTML ke Canvas
+                    const canvas = await html2canvas(slideInner, {
+                        scale: 2, // Scale 2 untuk kualitas gambar HD
+                        useCORS: true, // Izinkan cross-origin untuk gambar eksternal (Unsplash / avatar)
+                        backgroundColor: '#ffffff'
+                    });
+                    
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    
+                    if (i > 0) {
+                        pdf.addPage([1280, 720], 'landscape');
+                    }
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
+                }
+
+                // Unduh filenya
+                pdf.save('Presentasi_Aktualisasi_ENotulen.pdf');
+                
+                // Kembalikan ke state awal
+                currentSlideIndex = originalIndex;
+                updateSlide();
+                document.body.classList.remove('pdf-export-mode');
+                exportBtn.innerHTML = originalIcon;
+                exportBtn.disabled = false;
+            });
+            // =================================
+        });
+    </script>
+</body>
+</html>
